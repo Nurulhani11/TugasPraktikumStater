@@ -6,7 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BooksExport;
+use App\Imports\BookImport;
 use PDF;
+
 
 class AdminController extends Controller
 {
@@ -27,6 +31,25 @@ class AdminController extends Controller
         return view('book', compact('user', 'books'));
     }
 
+    public function export()
+    {
+        return Excel::download(new BooksExport, 'books.xlsx');
+    }
+
+    public function import()
+    {
+        Excel::import(new BooksImport, $req->file('file'));
+
+        $notification = array(
+            'message' => 'Import data berhasil dilakukan',
+            'alert-type' => 'success'
+        );
+
+        return redirect()->route('admin.books')
+        ->with($notification);
+    }
+
+}
     public function submit_book(Request $req)
     {
         $validate = $req->validate([
@@ -54,6 +77,7 @@ class AdminController extends Controller
             $book->cover = $filename;
 
         }
+    }
 
         $book->save();
 
